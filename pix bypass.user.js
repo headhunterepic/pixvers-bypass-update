@@ -16,7 +16,6 @@
 
     let savedImagePath = null;
 
-    // รหัสผ่านที่เข้ารหัสด้วย base64
     const ENCRYPTED_PASSWORD = 'Z2hINiFveG9kSHgqb1ZGMjg3IyM5S1FyNlFBZUhmJTcqUEZeSm9pJQ==';
 
     function decryptPassword(encrypted) {
