@@ -59,7 +59,7 @@
         if (userInput === correctPass) {
             localStorage.setItem('authorizationTimestamp', currentTime);
             console.log('[Debug] Password correct, authorization granted for 24 hours');
-            alert('รหัสผ่านถูกต้อง! บายพาสเริ่มทำงานแล้ว');
+            alert('รหัสผ่านถูกต้อง! บายพาสเริ่มทำงานแล้ว (รหัสผ่านใช้งานได้ครั้งเดียว)');
             return true;
         } else {
             console.log('[Debug] Password incorrect');
