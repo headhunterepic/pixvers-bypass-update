@@ -42,7 +42,7 @@
             return true;
         }
 
-        const userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้งานสคริปต์ (ต้องใส่ใหม่ทุก 24 ชั่วโมง):');
+        const userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้บายพาส:');
         if (!userInput) {
             console.log('[Debug] No password entered');
             alert('กรุณาใส่รหัสผ่าน');
@@ -59,11 +59,11 @@
         if (userInput === correctPass) {
             localStorage.setItem('authorizationTimestamp', currentTime);
             console.log('[Debug] Password correct, authorization granted for 24 hours');
-            alert('รหัสผ่านถูกต้อง! สคริปต์เริ่มทำงานแล้ว (ใช้งานได้ 24 ชั่วโมง)');
+            alert('รหัสผ่านถูกต้อง! บายพาสเริ่มทำงานแล้ว');
             return true;
         } else {
             console.log('[Debug] Password incorrect');
-            alert('รหัสผ่านไม่ถูกต้อง สคริปต์จะไม่ทำงาน');
+            alert('รหัสผ่านไม่ถูกต้อง บายพาสจะไม่ทำงาน');
             return false;
         }
     }
