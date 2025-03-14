@@ -3,7 +3,7 @@
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
 // @version     3.0
-// @author      cptdan
+// @author      pixvers creator + + 
 // ==/UserScript==
 
 (function () {
