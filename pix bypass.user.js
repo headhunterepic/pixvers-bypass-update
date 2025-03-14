@@ -2,60 +2,12 @@
 // @name        pixverse nsfw video bypass
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.1
+// @version     3.0
 // @author      cptdan
 // ==/UserScript==
 
 (function () {
     'use strict';
-
-    // ฟังก์ชันเข้ารหัสและถอดรหัส
-    function simpleEncrypt(str) {
-        return btoa(rot13(str)); // base64 + ROT13
-    }
-
-    function simpleDecrypt(str) {
-        return rot13(atob(str)); // ถอด base64 แล้วถอด ROT13
-    }
-
-    function rot13(str) {
-        return str.replace(/[a-zA-Z]/g, function (c) {
-            return String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
-        });
-    }
-
-    // รหัสที่ถูกเข้ารหัสไว้ (Su^f8##wT%TN)
-    const encryptedPass = "U2g^d##jG%GA"; // ผลลัพธ์จากการเข้ารหัส Su^f8##wT%TN
-
-    // ตรวจสอบและจัดการรหัสผ่าน
-    function checkPassword() {
-        const lastAuth = localStorage.getItem('lastAuthTime');
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 ชั่วโมงในมิลลิวินาที
-
-        if (!lastAuth || (now - lastAuth > oneDay)) {
-            let userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้งานสคริปต์:');
-            if (userInput === null) {
-                alert('การยกเลิกจะทำให้สคริปต์ไม่ทำงาน');
-                return false;
-            }
-
-            if (simpleDecrypt(encryptedPass) === userInput) {
-                localStorage.setItem('lastAuthTime', now);
-                console.log('[Auth] รหัสผ่านถูกต้อง การเข้าถึงได้รับอนุญาต');
-                return true;
-            } else {
-                alert('รหัสผ่านไม่ถูกต้อง สคริปต์จะไม่ทำงาน');
-                return false;
-            }
-        }
-        return true; // ผ่านการตรวจสอบแล้วใน 24 ชม.
-    }
-
-    // เรียกใช้การตรวจสอบรหัสผ่าน ถ้าไม่ผ่านจะหยุดการทำงาน
-    if (!checkPassword()) {
-        return; // ออกจากสคริปต์ทันทีถ้ารหัสไม่ถูกต้อง
-    }
 
     let savedImagePath = null;
 
