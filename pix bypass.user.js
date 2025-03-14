@@ -16,7 +16,7 @@
 
     let savedImagePath = null;
 
-    const ENCRYPTED_PASSWORD = 'Z2hINiFveG9kSHgqb1ZGMjg3IyM5S1FyNlFBZUhmJTcqUEZeSm9pJQ==';
+    const ENCRYPTED_PASSWORD = 'ZmRWNWtrU0JpRyp1';
 
     function decryptPassword(encrypted) {
         try {
@@ -32,12 +32,17 @@
 
     function checkPassword() {
         console.log('[Debug] Checking password...');
-        if (localStorage.getItem('scriptAuthorized')) {
-            console.log('[Debug] Script already authorized');
+        
+        const authTimestamp = localStorage.getItem('authorizationTimestamp');
+        const currentTime = Date.now();
+        const oneDayInMs = 24 * 60 * 60 * 1000;
+
+        if (authTimestamp && (currentTime - authTimestamp < oneDayInMs)) {
+            console.log('[Debug] Authorization still valid (less than 24 hours)');
             return true;
         }
 
-        const userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้งานสคริปต์:');
+        const userInput = prompt('กรุณาใส่รหัสผ่านเพื่อใช้งานสคริปต์ (ต้องใส่ใหม่ทุก 24 ชั่วโมง):');
         if (!userInput) {
             console.log('[Debug] No password entered');
             alert('กรุณาใส่รหัสผ่าน');
@@ -52,9 +57,9 @@
 
         console.log('[Debug] Comparing passwords...');
         if (userInput === correctPass) {
-            localStorage.setItem('scriptAuthorized', 'true');
-            console.log('[Debug] Password correct, script authorized');
-            alert('รหัสผ่านถูกต้อง! สคริปต์เริ่มทำงานแล้ว');
+            localStorage.setItem('authorizationTimestamp', currentTime);
+            console.log('[Debug] Password correct, authorization granted for 24 hours');
+            alert('รหัสผ่านถูกต้อง! สคริปต์เริ่มทำงานแล้ว (ใช้งานได้ 24 ชั่วโมง)');
             return true;
         } else {
             console.log('[Debug] Password incorrect');
