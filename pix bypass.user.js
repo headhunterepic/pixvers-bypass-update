@@ -2,61 +2,144 @@
 // @name        pixverse nsfw video bypass
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.4
-// @author      pixvers creator + + 
+// @version     3.5
+// @author      pixvers creator + +
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    // คีย์ที่ถูกเข้ารหัสแบบ base64 และเลื่อนตัวอักษร (X7K9P2 -> obfuscated)
-    const ENCODED_KEY = 'Y8L0Q3'; // ผลจากการเข้ารหัส X7K9P2 (เลื่อน +1 แล้ว base64)
-    let lastKeyValidation = null;
+    const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join('');
     let savedImagePath = null;
+    let hasShownInitialNotification = false;
 
-    // ฟังก์ชันถอดรหัสคีย์
-    function decodeKey(encoded) {
-        const base64Decoded = atob(encoded.replace(/[0-9]/g, (m) => String.fromCharCode(m.charCodeAt(0) - 1)));
-        return base64Decoded.split('').map(c => String.fromCharCode(c.charCodeAt(0) - 1)).join('');
-    }
-
-    // ฟังก์ชันแจ้งเตือนแบบกำหนดเอง
+    
     function showNotification(message) {
+        if (hasShownInitialNotification) return; 
+
         const notification = document.createElement('div');
         notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 10px 20px;
-            background: #4CAF50;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
             color: white;
-            border-radius: 5px;
+            border-radius: 8px;
             z-index: 9999;
-            font-family: Arial, sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         `;
         document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
+        setTimeout(() => notification.style.opacity = '1', 10);
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+        hasShownInitialNotification = true;
     }
 
-    // ฟังก์ชันตรวจสอบคีย์
+    // ฟังก์ชันตรวจสอบคีย์ด้วยหน้าต่างล็อกอินสวยๆ
     function validateKey() {
         const now = Date.now();
-        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) { // 1 ชม = 3600000 ms
+        const lastKeyValidation = localStorage.getItem('lastKeyValidation') ? parseInt(localStorage.getItem('lastKeyValidation')) : null;
+
+        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) { 
+            if (!hasShownInitialNotification) showNotification('บายพาสทำงานแล้ว');
             return true;
         }
 
-        const userKey = prompt('กรุณาใส่คีย์เพื่อใช้งานบายพาส (ติดต่อผู้สร้างสคริปต์เพื่อรับคีย์):');
-        const decodedKey = decodeKey(ENCODED_KEY);
-        if (userKey === decodedKey) { // เปรียบเทียบกับคีย์จริง (X7K9P2)
-            lastKeyValidation = now;
-            showNotification('บายพาสเริ่มทำงานแล้ว!');
-            return true;
-        } else {
-            alert('คีย์ไม่ถูกต้อง! บายพาสจะไม่ทำงาน');
-            return false;
-        }
+        
+        const loginOverlay = document.createElement('div');
+        loginOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        `;
+
+        const loginBox = document.createElement('div');
+        loginBox.style.cssText = `
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            width: 320px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        const title = document.createElement('h2');
+        title.textContent = 'กรุณาใส่คีย์';
+        title.style.cssText = `
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #333;
+        `;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'ใส่คีย์ 6 ตัว';
+        input.style.cssText = `
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        `;
+
+        const button = document.createElement('button');
+        button.textContent = 'ยืนยัน';
+        button.style.cssText = `
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        `;
+        button.onmouseover = () => button.style.transform = 'scale(1.05)';
+        button.onmouseout = () => button.style.transform = 'scale(1)';
+
+        button.onclick = () => {
+            const userKey = input.value.trim();
+            console.log('[Debug] User entered key:', userKey);
+            console.log('[Debug] Expected key:', HIDDEN_KEY);
+
+            if (userKey === HIDDEN_KEY) {
+                localStorage.setItem('lastKeyValidation', now.toString());
+                document.body.removeChild(loginOverlay);
+                showNotification('บายพาสทำงานแล้ว');
+                console.log('[Debug] Key validated successfully');
+            } else {
+                input.style.borderColor = '#ff6b6b';
+                input.placeholder = 'คีย์ไม่ถูกต้อง!';
+                input.value = '';
+                console.log('[Debug] Key validation failed');
+            }
+        };
+
+        loginBox.appendChild(title);
+        loginBox.appendChild(input);
+        loginBox.appendChild(button);
+        loginOverlay.appendChild(loginBox);
+        document.body.appendChild(loginOverlay);
+
+        return false; 
     }
 
     function setupWatermarkButton() {
@@ -81,26 +164,33 @@
                 newButton.onmouseover = () => newButton.style.transform = 'scale(1.05)';
                 newButton.onmouseout = () => newButton.style.transform = 'scale(1)';
 
-                newButton.onclick = function (event) {
+                newButton.onclick = async function (event) {
                     event.stopPropagation();
                     if (!validateKey()) return;
 
-                    showNotification('กำลังดำเนินการบายพาสวอเตอร์มาร์ก...');
                     console.log('[Watermark-free] Button clicked!');
-
                     const videoElement = document.querySelector(".component-video > video");
                     if (videoElement && videoElement.src) {
                         const videoUrl = videoElement.src;
                         console.log('[Watermark-free] Video URL:', videoUrl);
 
-                        const link = document.createElement('a');
-                        link.href = videoUrl;
-                        link.download = videoUrl.split('/').pop() || 'video.mp4';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-                        console.log('[Watermark-free] Download triggered for:', videoUrl);
+                        
+                        try {
+                            const response = await fetch(videoUrl);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = videoUrl.split('/').pop() || 'video.mp4';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                            console.log('[Watermark-free] Download triggered for:', videoUrl);
+                        } catch (error) {
+                            console.error('[Watermark-free] Download failed:', error);
+                            alert('เกิดข้อผิดพลาดในการดาวน์โหลดวิดีโอ');
+                        }
                     } else {
                         console.error('[Watermark-free] Video element not found or no src attribute');
                         alert('ไม่พบวิดีโอสำหรับดาวน์โหลด กรุณาตรวจสอบว่ามีวิดีโอโหลดอยู่');
@@ -127,7 +217,6 @@
 
     function modifyResponseData(data) {
         if (!validateKey()) return data;
-        showNotification('บายพาสข้อมูลวิดีโอกำลังทำงาน...');
 
         if (Array.isArray(data)) {
             return data.map(item => {
@@ -153,13 +242,11 @@
 
     function modifyBatchUploadData(data) {
         if (!validateKey()) return data;
-        showNotification('บายพาสการอัพโหลดแบบกลุ่มทำงาน...');
         return modifyBatchUploadDataLogic(data);
     }
 
     function modifySingleUploadData(data) {
         if (!validateKey()) return data;
-        showNotification('บายพาสการอัพโหลดเดี่ยวทำงาน...');
         return modifySingleUploadDataLogic(data);
     }
 
