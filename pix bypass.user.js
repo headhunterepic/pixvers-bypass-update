@@ -60,7 +60,7 @@
         const lastKeyValidation = localStorage.getItem('lastKeyValidation') ? parseInt(localStorage.getItem('lastKeyValidation')) : null;
 
         if (lastKeyValidation && (now - lastKeyValidation < 3600000)) {
-            if (!hasShownInitialNotification) showNotification('บายพาสทำงานแล้ว');
+            if (!hasShownInitialNotification) showNotification('บายพาสกำลังทำงาน!');
             return true;
         }
 
