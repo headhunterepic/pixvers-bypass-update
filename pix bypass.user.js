@@ -2,31 +2,20 @@
 // @name        pixverse nsfw video bypass
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.6
+// @version     3.5
 // @author      pixvers creator + + 
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    
-    const ENCODED_KEY = 'X2A7K9'; 
+    const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join(''); 
     let savedImagePath = null;
     let hasShownInitialNotification = false;
 
-    
-    function decodeKey(encoded) {
-        
-        const swapped = encoded[4] + encoded[5] + encoded[2] + encoded[3] + encoded[0] + encoded[1];
-       
-        return swapped.replace(/[A-Z]/g, c => 
-            String.fromCharCode((c.charCodeAt(0) - 65 + 13) % 26 + 65)
-        ).replace(/[0-9]/g, c => c);
-    }
-
-  
+   
     function showNotification(message) {
-        if (hasShownInitialNotification) return;
+        if (hasShownInitialNotification) return; 
 
         const notification = document.createElement('div');
         notification.textContent = message;
@@ -54,16 +43,17 @@
         hasShownInitialNotification = true;
     }
 
-    
+   
     function validateKey() {
         const now = Date.now();
         const lastKeyValidation = localStorage.getItem('lastKeyValidation') ? parseInt(localStorage.getItem('lastKeyValidation')) : null;
 
-        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) {
+        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) { // 1 ชม = 3600000 ms
             if (!hasShownInitialNotification) showNotification('บายพาสกำลังทำงาน!');
             return true;
         }
 
+       
         const loginOverlay = document.createElement('div');
         loginOverlay.style.cssText = `
             position: fixed;
@@ -127,11 +117,10 @@
 
         button.onclick = () => {
             const userKey = input.value.trim();
-            const decodedKey = decodeKey(ENCODED_KEY); 
             console.log('[Debug] User entered key:', userKey);
-            console.log('[Debug] Decoded key:', decodedKey);
+            console.log('[Debug] Expected key:', HIDDEN_KEY);
 
-            if (userKey === decodedKey) {
+            if (userKey === HIDDEN_KEY) {
                 localStorage.setItem('lastKeyValidation', now.toString());
                 document.body.removeChild(loginOverlay);
                 showNotification('บายพาสทำงานแล้ว');
@@ -150,7 +139,7 @@
         loginOverlay.appendChild(loginBox);
         document.body.appendChild(loginOverlay);
 
-        return false;
+        return false; 
     }
 
     function setupWatermarkButton() {
@@ -185,6 +174,7 @@
                         const videoUrl = videoElement.src;
                         console.log('[Watermark-free] Video URL:', videoUrl);
 
+                        // ดาวน์โหลดโดยไม่เปิดแท็บใหม่
                         try {
                             const response = await fetch(videoUrl);
                             const blob = await response.blob();
@@ -260,6 +250,7 @@
         return modifySingleUploadDataLogic(data);
     }
 
+    // แยก logic ออกมาเพื่อความกระชับ
     function modifyBatchUploadDataLogic(data) {
         console.log('[Debug] modifyBatchUploadData called with:', data);
         try {
@@ -432,9 +423,10 @@
             return instance;
         };
 
-        console.log('Axios patching complete');
+        console.log('Axios patching for /video/list/personal, /media/batch_upload_media, and /media/upload complete');
     }
 
     document.addEventListener('DOMContentLoaded', setupWatermarkButton);
+
     waitForAxios();
 })();
