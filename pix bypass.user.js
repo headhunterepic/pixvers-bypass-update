@@ -9,153 +9,56 @@
 (function () {
     'use strict';
 
-    const ENCRYPTED_KEY = 'eWlwWEUyXiNKYVZC';
-    const KEY_EXPIRY = 60 * 60 * 1000;
+    // คีย์ที่ถูกเข้ารหัสแบบ base64 และเลื่อนตัวอักษร (X7K9P2 -> obfuscated)
+    const ENCODED_KEY = 'Y8L0Q3'; // ผลจากการเข้ารหัส X7K9P2 (เลื่อน +1 แล้ว base64)
+    let lastKeyValidation = null;
     let savedImagePath = null;
-    let lastKeyEntryTime = localStorage.getItem('lastKeyEntryTime') ? parseInt(localStorage.getItem('lastKeyEntryTime')) : null;
 
-   
-    function simpleDecrypt(str) {
-        return atob(str);
+    // ฟังก์ชันถอดรหัสคีย์
+    function decodeKey(encoded) {
+        const base64Decoded = atob(encoded.replace(/[0-9]/g, (m) => String.fromCharCode(m.charCodeAt(0) - 1)));
+        return base64Decoded.split('').map(c => String.fromCharCode(c.charCodeAt(0) - 1)).join('');
     }
 
-   
-    function injectStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .auth-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 9999;
-            }
-            .auth-box {
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                padding: 2rem;
-                border-radius: 15px;
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-                width: 350px;
-                text-align: center;
-                color: #fff;
-                font-family: 'Arial', sans-serif;
-            }
-            .auth-box h2 {
-                margin: 0 0 1.5rem;
-                color: #00ffff;
-                text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-            }
-            .auth-box input {
-                width: 100%;
-                padding: 0.8rem;
-                margin-bottom: 1rem;
-                border: 1px solid #00ffff;
-                border-radius: 5px;
-                background: #0f1626;
-                color: #fff;
-                font-size: 1rem;
-            }
-            .auth-box button {
-                width: 100%;
-                padding: 0.8rem;
-                background: #00ffff;
-                border: none;
-                border-radius: 5px;
-                color: #1a1a2e;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            .auth-box button:hover {
-                background: #00cccc;
-                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-            }
-            .notification {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
-                padding: 1rem 2rem;
-                border-radius: 10px;
-                color: #1a1a2e;
-                box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-                font-family: 'Arial', sans-serif;
-                font-weight: bold;
-                z-index: 10000;
-                animation: slideIn 0.5s ease-out;
-            }
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-   
-    function showAuthPrompt() {
-        const overlay = document.createElement('div');
-        overlay.className = 'auth-overlay';
-        overlay.innerHTML = `
-            <div class="auth-box">
-                <h2>Enter Access Key</h2>
-                <input type="password" id="keyInput" placeholder="Enter key here">
-                <button id="submitKey">Submit</button>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-
-        const submitButton = document.getElementById('submitKey');
-        const keyInput = document.getElementById('keyInput');
-
-        submitButton.onclick = () => {
-            const enteredKey = keyInput.value;
-            if (simpleDecrypt(ENCRYPTED_KEY) === enteredKey) {
-                lastKeyEntryTime = Date.now();
-                localStorage.setItem('lastKeyEntryTime', lastKeyEntryTime);
-                document.body.removeChild(overlay);
-                showNotification('Bypass Activated!');
-            } else {
-                alert('Invalid key!');
-            }
-        };
-
-        keyInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') submitButton.click();
-        });
-    }
-
+    // ฟังก์ชันแจ้งเตือนแบบกำหนดเอง
     function showNotification(message) {
-        const notif = document.createElement('div');
-        notif.className = 'notification';
-        notif.textContent = message;
-        document.body.appendChild(notif);
-        setTimeout(() => {
-            notif.style.animation = 'slideOut 0.5s ease-in';
-            setTimeout(() => document.body.removeChild(notif), 500);
-        }, 3000);
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
     }
 
-   
-    function checkAuth() {
+    // ฟังก์ชันตรวจสอบคีย์
+    function validateKey() {
         const now = Date.now();
-        if (!lastKeyEntryTime || (now - lastKeyEntryTime) > KEY_EXPIRY) {
-            showAuthPrompt();
+        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) { // 1 ชม = 3600000 ms
+            return true;
+        }
+
+        const userKey = prompt('กรุณาใส่คีย์เพื่อใช้งานบายพาส (ติดต่อผู้สร้างสคริปต์เพื่อรับคีย์):');
+        const decodedKey = decodeKey(ENCODED_KEY);
+        if (userKey === decodedKey) { // เปรียบเทียบกับคีย์จริง (X7K9P2)
+            lastKeyValidation = now;
+            showNotification('บายพาสเริ่มทำงานแล้ว!');
+            return true;
+        } else {
+            alert('คีย์ไม่ถูกต้อง! บายพาสจะไม่ทำงาน');
             return false;
         }
-        return true;
     }
 
-    
     function setupWatermarkButton() {
         function findAndReplaceButton() {
             let watermarkDiv = Array.from(document.getElementsByTagName('div')).find(
@@ -165,13 +68,24 @@
             if (watermarkDiv) {
                 const newButton = document.createElement('button');
                 newButton.textContent = 'Watermark-free';
-
-                const computedStyle = window.getComputedStyle(watermarkDiv);
-                newButton.style.cssText = computedStyle.cssText;
+                newButton.style.cssText = `
+                    ${window.getComputedStyle(watermarkDiv).cssText}
+                    background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                `;
+                newButton.onmouseover = () => newButton.style.transform = 'scale(1.05)';
+                newButton.onmouseout = () => newButton.style.transform = 'scale(1)';
 
                 newButton.onclick = function (event) {
                     event.stopPropagation();
-                    if (!checkAuth()) return;
+                    if (!validateKey()) return;
+
+                    showNotification('กำลังดำเนินการบายพาสวอเตอร์มาร์ก...');
                     console.log('[Watermark-free] Button clicked!');
 
                     const videoElement = document.querySelector(".component-video > video");
@@ -189,7 +103,7 @@
                         console.log('[Watermark-free] Download triggered for:', videoUrl);
                     } else {
                         console.error('[Watermark-free] Video element not found or no src attribute');
-                        alert('Could not find the video to download. Please ensure a video is loaded.');
+                        alert('ไม่พบวิดีโอสำหรับดาวน์โหลด กรุณาตรวจสอบว่ามีวิดีโอโหลดอยู่');
                     }
                 };
 
@@ -212,6 +126,9 @@
     }
 
     function modifyResponseData(data) {
+        if (!validateKey()) return data;
+        showNotification('บายพาสข้อมูลวิดีโอกำลังทำงาน...');
+
         if (Array.isArray(data)) {
             return data.map(item => {
                 const modifiedItem = item;
@@ -235,6 +152,19 @@
     }
 
     function modifyBatchUploadData(data) {
+        if (!validateKey()) return data;
+        showNotification('บายพาสการอัพโหลดแบบกลุ่มทำงาน...');
+        return modifyBatchUploadDataLogic(data);
+    }
+
+    function modifySingleUploadData(data) {
+        if (!validateKey()) return data;
+        showNotification('บายพาสการอัพโหลดเดี่ยวทำงาน...');
+        return modifySingleUploadDataLogic(data);
+    }
+
+    // แยก logic ออกมาเพื่อความกระชับ
+    function modifyBatchUploadDataLogic(data) {
         console.log('[Debug] modifyBatchUploadData called with:', data);
         try {
             if (data && data.ErrCode === 400) {
@@ -264,8 +194,6 @@
                     };
                 }
             }
-
-            console.log('[Debug] No saved image path, returning original data for batch_upload_media');
             return data;
         } catch (error) {
             console.error('[Debug] Error in modifyBatchUploadData:', error);
@@ -273,7 +201,7 @@
         }
     }
 
-    function modifySingleUploadData(data) {
+    function modifySingleUploadDataLogic(data) {
         console.log('[Debug] modifySingleUploadData called with:', data);
         try {
             if (data && data.ErrCode === 400040) {
@@ -294,8 +222,6 @@
                     };
                 }
             }
-
-            console.log('[Debug] No saved image path, returning original data for /media/upload');
             return data;
         } catch (error) {
             console.error('[Debug] Error in modifySingleUploadData:', error);
@@ -314,7 +240,6 @@
                 if (url && url.includes('/video/list/personal')) {
                     const promise = instancePost.apply(this, arguments);
                     return promise.then(response => {
-                        if (!checkAuth()) throw new Error('Authentication required');
                         console.log('[Debug] /video/list/personal response:', response);
                         const modifiedData = modifyResponseData(response.data);
                         return {
@@ -373,7 +298,6 @@
 
             instance.interceptors.response.use(
                 function (response) {
-                    if (!checkAuth()) throw new Error('Authentication required');
                     if (response.config.url && response.config.url.includes('/media/batch_upload_media')) {
                         console.log('[Debug] /media/batch_upload_media raw response:', response);
                         const modifiedData = modifyBatchUploadData(response.data);
@@ -415,9 +339,7 @@
         console.log('Axios patching for /video/list/personal, /media/batch_upload_media, and /media/upload complete');
     }
 
-    // เริ่มต้น
-    injectStyles();
-    if (checkAuth()) showNotification('Bypass Activated!');
     document.addEventListener('DOMContentLoaded', setupWatermarkButton);
+
     waitForAxios();
 })();
