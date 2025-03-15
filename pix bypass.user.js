@@ -2,23 +2,21 @@
 // @name        pixverse nsfw video bypass
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     4.6
+// @version     4.3
 // @author      pixvers creator + +
-// @updateURL   https://github.com/headhunterepic/pixvers-bypass-update/raw/refs/heads/main/pix%20bypass.user.js
-// @downloadURL https://github.com/headhunterepic/pixvers-bypass-update/raw/refs/heads/main/pix%20bypass.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-   
-    const encodedKey = 'SzkjbVB4'; 
-    const eK = atob(encodedKey); 
+    // คีย์ใหม่ที่เข้ารหัสด้วย Base64 (K9#mPx)
+    const encodedKey = 'SzkjbVB4'; // Base64 ของ K9#mPx
+    const eK = atob(encodedKey); // ถอดรหัสได้ K9#mPx
     let isBypassActive = localStorage.getItem('bypassKey') === eK;
 
     let savedImagePath = null;
 
-    
+    // ฟังก์ชันแสดงการแจ้งเตือน
     function showNotification(message, isError = false) {
         const noti = document.createElement('div');
         noti.textContent = message;
@@ -52,39 +50,7 @@
         document.head.appendChild(styleSheet);
     }
 
-    
-    function checkForUpdate() {
-        const updateURL = 'https://github.com/headhunterepic/pixvers-bypass-update/raw/refs/heads/main/pix%20bypass.user.js';
-        console.log('[Update Check] Checking for updates...');
-
-        fetch(updateURL, { cache: 'no-store' })
-            .then(response => response.text())
-            .then(scriptText => {
-                const remoteVersionMatch = scriptText.match(/@version\s+([\d.]+)/);
-                const remoteVersion = remoteVersionMatch ? parseFloat(remoteVersionMatch[1]) : 0;
-                const localVersion = 4.6; // เวอร์ชันปัจจุบัน
-
-                console.log('[Update Check] Local version:', localVersion, 'Remote version:', remoteVersion);
-
-                if (remoteVersion > localVersion) {
-                    showNotification('พบเวอร์ชันใหม่ กำลังอัปเดต...');
-                    console.log('[Update Check] Updating to new version:', remoteVersion);
-                    // Tampermonkey จะจัดการอัปเดตเองผ่าน @updateURL
-                } else {
-                    console.log('[Update Check] No update available.');
-                }
-            })
-            .catch(error => {
-                console.error('[Update Check] Error fetching update:', error);
-                showNotification('ไม่สามารถตรวจสอบอัปเดตได้', true);
-            });
-    }
-
-    
-    setInterval(checkForUpdate, 60 * 1000); 
-    checkForUpdate(); 
-
-    /
+    // ฟังก์ชันสร้างหน้าต่างป้อนคีย์
     function createKeyPrompt() {
         if (isBypassActive) {
             startBypass();
@@ -178,7 +144,7 @@
         waitForAxios();
     }
 
-
+    // ฟังก์ชันหลักสำหรับจัดการปุ่ม "Watermark-free"
     function setupWatermarkButton() {
         if (!isBypassActive) return;
         showNotification('บายพาสเปิดใช้งาน');
