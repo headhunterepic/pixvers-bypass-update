@@ -9,14 +9,14 @@
 (function () {
     'use strict';
 
-    // คีย์ใหม่ที่เข้ารหัสด้วย Base64 (K9#mPx)
-    const encodedKey = 'SzkjbVB4'; // Base64 ของ K9#mPx
-    const eK = atob(encodedKey); // ถอดรหัสได้ K9#mPx
+    
+    const encodedKey = 'SzkjbVB4'; 
+    const eK = atob(encodedKey); 
     let isBypassActive = localStorage.getItem('bypassKey') === eK;
 
     let savedImagePath = null;
 
-    // ฟังก์ชันแสดงการแจ้งเตือน
+  
     function showNotification(message, isError = false) {
         const noti = document.createElement('div');
         noti.textContent = message;
@@ -50,7 +50,7 @@
         document.head.appendChild(styleSheet);
     }
 
-    // ฟังก์ชันสร้างหน้าต่างป้อนคีย์
+   
     function createKeyPrompt() {
         if (isBypassActive) {
             startBypass();
@@ -144,7 +144,7 @@
         waitForAxios();
     }
 
-    // ฟังก์ชันหลักสำหรับจัดการปุ่ม "Watermark-free"
+  
     function setupWatermarkButton() {
         if (!isBypassActive) return;
         showNotification('บายพาสเปิดใช้งาน');
