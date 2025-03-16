@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name        pixverse nsfw video bypass
+// @name        pixverse nsfw video bypass +
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.7
+// @version     3.8
 // @author      pixvers creator + +
 // ==/UserScript==
 
