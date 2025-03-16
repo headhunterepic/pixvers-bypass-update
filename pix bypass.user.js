@@ -12,20 +12,8 @@
     const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join('');
     let savedImagePath = null;
     let hasShownInitialNotification = false;
-    let notificationQueue = [];
-    let isShowingNotification = false;
 
     function showNotification(message, callback) {
-        notificationQueue.push({ message, callback });
-        processNotificationQueue();
-    }
-
-    function processNotificationQueue() {
-        if (isShowingNotification || notificationQueue.length === 0) return;
-
-        isShowingNotification = true;
-        const { message, callback } = notificationQueue.shift();
-
         const notification = document.createElement('div');
         notification.textContent = message;
         notification.style.cssText = `
@@ -49,27 +37,17 @@
             notification.style.opacity = '0';
             setTimeout(() => {
                 notification.remove();
-                isShowingNotification = false;
                 if (callback) callback();
-                processNotificationQueue(); // Show the next notification in the queue
             }, 300);
         }, 3000); // Each notification lasts 3 seconds
     }
 
-    function showLegalWarning(callback) {
-        showNotification('We do not support distribution for commercial use, the use of real individuals\' images, or any illegal activities.', callback);
-    }
+    function showInitialNotification() {
+        if (hasShownInitialNotification) return;
 
-    function showBypassUsageNotification() {
-        showLegalWarning(() => {
-            showNotification('Bypass used!');
-        });
-    }
-
-    function showBypassActiveNotification() {
-        showLegalWarning(() => {
+        showNotification('We do not support distribution for commercial use, the use of real individuals\' images, or any illegal activities.', () => {
             showNotification('Bypass is active!');
-            hasShownInitialNotification = true;
+            hasShownInitialNotification = true; // Mark as shown so it doesn’t repeat
         });
     }
 
@@ -77,9 +55,7 @@
         const isKeyValidated = localStorage.getItem('isKeyValidated');
 
         if (isKeyValidated === 'true') {
-            if (!hasShownInitialNotification) {
-                showBypassActiveNotification();
-            }
+            showInitialNotification(); // Show only once on page load if validated
             return true;
         }
 
@@ -152,7 +128,7 @@
             if (userKey === HIDDEN_KEY) {
                 localStorage.setItem('isKeyValidated', 'true');
                 document.body.removeChild(loginOverlay);
-                showBypassActiveNotification();
+                showInitialNotification(); // Show only once when key is validated
                 console.log('[Debug] Key validated successfully');
             } else {
                 input.style.borderColor = '#ff6b6b';
@@ -196,7 +172,7 @@
                 newButton.onclick = async function (event) {
                     event.stopPropagation();
                     if (!validateKey()) return;
-                    showBypassUsageNotification(); // Notify on bypass usage
+                    // No notification here; only shown once initially
 
                     console.log('[Watermark-free] Button clicked!');
                     const videoElement = document.querySelector(".component-video > video");
@@ -246,7 +222,7 @@
 
     function modifyResponseData(data) {
         if (!validateKey()) return data;
-        showBypassUsageNotification(); // Notify on bypass usage
+        // No notification here; only shown once initially
 
         if (Array.isArray(data)) {
             return data.map(item => {
@@ -272,13 +248,13 @@
 
     function modifyBatchUploadData(data) {
         if (!validateKey()) return data;
-        showBypassUsageNotification(); // Notify on bypass usage
+        // No notification here; only shown once initially
         return modifyBatchUploadDataLogic(data);
     }
 
     function modifySingleUploadData(data) {
         if (!validateKey()) return data;
-        showBypassUsageNotification(); // Notify on bypass usage
+        // No notification here; only shown once initially
         return modifySingleUploadDataLogic(data);
     }
 
