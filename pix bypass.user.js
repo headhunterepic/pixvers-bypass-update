@@ -2,20 +2,19 @@
 // @name        pixverse nsfw video bypass
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.5
-// @author      pixvers creator + + 
+// @version     3.6
+// @author      pixvers creator + +
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join(''); 
+    const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join('');
     let savedImagePath = null;
     let hasShownInitialNotification = false;
 
-   
     function showNotification(message) {
-        if (hasShownInitialNotification) return; 
+        if (hasShownInitialNotification) return;
 
         const notification = document.createElement('div');
         notification.textContent = message;
@@ -43,17 +42,15 @@
         hasShownInitialNotification = true;
     }
 
-   
     function validateKey() {
-        const now = Date.now();
-        const lastKeyValidation = localStorage.getItem('lastKeyValidation') ? parseInt(localStorage.getItem('lastKeyValidation')) : null;
+        // ตรวจสอบว่ามีการยืนยันรหัสผ่านแล้วหรือไม่
+        const isKeyValidated = localStorage.getItem('isKeyValidated');
 
-        if (lastKeyValidation && (now - lastKeyValidation < 3600000)) { // 1 ชม = 3600000 ms
+        if (isKeyValidated === 'true') {
             if (!hasShownInitialNotification) showNotification('บายพาสกำลังทำงาน!');
             return true;
         }
 
-       
         const loginOverlay = document.createElement('div');
         loginOverlay.style.cssText = `
             position: fixed;
@@ -121,7 +118,7 @@
             console.log('[Debug] Expected key:', HIDDEN_KEY);
 
             if (userKey === HIDDEN_KEY) {
-                localStorage.setItem('lastKeyValidation', now.toString());
+                localStorage.setItem('isKeyValidated', 'true'); // บันทึกสถานะถาวร
                 document.body.removeChild(loginOverlay);
                 showNotification('บายพาสทำงานแล้ว');
                 console.log('[Debug] Key validated successfully');
@@ -139,7 +136,7 @@
         loginOverlay.appendChild(loginBox);
         document.body.appendChild(loginOverlay);
 
-        return false; 
+        return false;
     }
 
     function setupWatermarkButton() {
@@ -174,7 +171,6 @@
                         const videoUrl = videoElement.src;
                         console.log('[Watermark-free] Video URL:', videoUrl);
 
-                        // ดาวน์โหลดโดยไม่เปิดแท็บใหม่
                         try {
                             const response = await fetch(videoUrl);
                             const blob = await response.blob();
@@ -250,7 +246,6 @@
         return modifySingleUploadDataLogic(data);
     }
 
-    // แยก logic ออกมาเพื่อความกระชับ
     function modifyBatchUploadDataLogic(data) {
         console.log('[Debug] modifyBatchUploadData called with:', data);
         try {
