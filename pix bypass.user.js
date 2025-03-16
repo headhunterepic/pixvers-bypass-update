@@ -12,9 +12,19 @@
     const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join('');
     let savedImagePath = null;
     let hasShownInitialNotification = false;
+    let notificationQueue = [];
+    let isShowingNotification = false;
 
-    function showNotification(message) {
-        if (hasShownInitialNotification) return;
+    function showNotification(message, callback) {
+        notificationQueue.push({ message, callback });
+        processNotificationQueue();
+    }
+
+    function processNotificationQueue() {
+        if (isShowingNotification || notificationQueue.length === 0) return;
+
+        isShowingNotification = true;
+        const { message, callback } = notificationQueue.shift();
 
         const notification = document.createElement('div');
         notification.textContent = message;
@@ -37,17 +47,39 @@
         setTimeout(() => notification.style.opacity = '1', 10);
         setTimeout(() => {
             notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-        hasShownInitialNotification = true;
+            setTimeout(() => {
+                notification.remove();
+                isShowingNotification = false;
+                if (callback) callback();
+                processNotificationQueue(); // Show the next notification in the queue
+            }, 300);
+        }, 3000); // Each notification lasts 3 seconds
+    }
+
+    function showLegalWarning(callback) {
+        showNotification('We do not support distribution for commercial use, the use of real individuals\' images, or any illegal activities.', callback);
+    }
+
+    function showBypassUsageNotification() {
+        showLegalWarning(() => {
+            showNotification('Bypass used!');
+        });
+    }
+
+    function showBypassActiveNotification() {
+        showLegalWarning(() => {
+            showNotification('Bypass is active!');
+            hasShownInitialNotification = true;
+        });
     }
 
     function validateKey() {
-        // ตรวจสอบว่ามีการยืนยันรหัสผ่านแล้วหรือไม่
         const isKeyValidated = localStorage.getItem('isKeyValidated');
 
         if (isKeyValidated === 'true') {
-            if (!hasShownInitialNotification) showNotification('บายพาสกำลังทำงาน!');
+            if (!hasShownInitialNotification) {
+                showBypassActiveNotification();
+            }
             return true;
         }
 
@@ -77,7 +109,7 @@
         `;
 
         const title = document.createElement('h2');
-        title.textContent = 'กรุณาใส่คีย์';
+        title.textContent = 'Please enter the key';
         title.style.cssText = `
             margin: 0 0 20px;
             font-size: 24px;
@@ -86,7 +118,7 @@
 
         const input = document.createElement('input');
         input.type = 'text';
-        input.placeholder = 'ใส่คีย์ 6 ตัว';
+        input.placeholder = 'Enter 6-character key';
         input.style.cssText = `
             width: 100%;
             padding: 10px;
@@ -98,7 +130,7 @@
         `;
 
         const button = document.createElement('button');
-        button.textContent = 'ยืนยัน';
+        button.textContent = 'Confirm';
         button.style.cssText = `
             background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
             color: white;
@@ -118,13 +150,13 @@
             console.log('[Debug] Expected key:', HIDDEN_KEY);
 
             if (userKey === HIDDEN_KEY) {
-                localStorage.setItem('isKeyValidated', 'true'); // บันทึกสถานะถาวร
+                localStorage.setItem('isKeyValidated', 'true');
                 document.body.removeChild(loginOverlay);
-                showNotification('บายพาสทำงานแล้ว');
+                showBypassActiveNotification();
                 console.log('[Debug] Key validated successfully');
             } else {
                 input.style.borderColor = '#ff6b6b';
-                input.placeholder = 'คีย์ไม่ถูกต้อง!';
+                input.placeholder = 'Invalid key!';
                 input.value = '';
                 console.log('[Debug] Key validation failed');
             }
@@ -164,6 +196,7 @@
                 newButton.onclick = async function (event) {
                     event.stopPropagation();
                     if (!validateKey()) return;
+                    showBypassUsageNotification(); // Notify on bypass usage
 
                     console.log('[Watermark-free] Button clicked!');
                     const videoElement = document.querySelector(".component-video > video");
@@ -185,11 +218,11 @@
                             console.log('[Watermark-free] Download triggered for:', videoUrl);
                         } catch (error) {
                             console.error('[Watermark-free] Download failed:', error);
-                            alert('เกิดข้อผิดพลาดในการดาวน์โหลดวิดีโอ');
+                            alert('Failed to download video');
                         }
                     } else {
                         console.error('[Watermark-free] Video element not found or no src attribute');
-                        alert('ไม่พบวิดีโอสำหรับดาวน์โหลด กรุณาตรวจสอบว่ามีวิดีโอโหลดอยู่');
+                        alert('No video found for download. Please ensure a video is loaded.');
                     }
                 };
 
@@ -213,6 +246,7 @@
 
     function modifyResponseData(data) {
         if (!validateKey()) return data;
+        showBypassUsageNotification(); // Notify on bypass usage
 
         if (Array.isArray(data)) {
             return data.map(item => {
@@ -238,11 +272,13 @@
 
     function modifyBatchUploadData(data) {
         if (!validateKey()) return data;
+        showBypassUsageNotification(); // Notify on bypass usage
         return modifyBatchUploadDataLogic(data);
     }
 
     function modifySingleUploadData(data) {
         if (!validateKey()) return data;
+        showBypassUsageNotification(); // Notify on bypass usage
         return modifySingleUploadDataLogic(data);
     }
 
