@@ -45,8 +45,8 @@
     function showInitialNotification() {
         if (hasShownInitialNotification) return;
 
-        showNotification('We do not support distribution for commercial use, the use of real individuals\' images, or any illegal activities.', () => {
-            showNotification('Bypass is active!');
+        showNotification('ไม่สนับสนุนการใช้งานที่ผิดกฏหมายหรือเพื่อการค้า กรุณาใช้งานด้วยความระมัดระวัง.', () => {
+            showNotification('บายพาสกำลังทำงาน!');
             hasShownInitialNotification = true; // Mark as shown so it doesn’t repeat
         });
     }
