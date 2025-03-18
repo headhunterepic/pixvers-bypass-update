@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        pixverse nsfw video bypass + (Improved UI)
+// @name        pixverse nsfw video bypass 
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
 // @version     3.9
