@@ -1,139 +1,98 @@
 // ==UserScript==
-// @name        pixverse nsfw video bypass +
+// @name        pixverse nsfw video bypass + (Improved UI)
 // @match       https://app.pixverse.ai/*
 // @run-at      document-start
-// @version     3.8
-// @author      pixvers creator + +
+// @version     3.9
+// @author      pixvers creator + + 
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    const HIDDEN_KEY = ['P', '4', 'X', '8', 'J', '1'].join('');
+    const HIDDEN_KEY = (() => {
+        const b = atob('SzlwMg=='); 
+        const m = String.fromCharCode(77, 55); 
+        const x = ['X', '4'].join(''); 
+        const q = String.fromCharCode(74, 56, 81); 
+        return b + m + x + q; 
+    })();
     let savedImagePath = null;
     let hasShownInitialNotification = false;
 
-    function showNotification(message, callback) {
+   
+
+    function showNotification(message, type = 'info', callback) {
         const notification = document.createElement('div');
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 24px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
-            color: white;
-            border-radius: 8px;
-            z-index: 9999;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        `;
+        notification.classList.add('notification', `notification-${type}`);
         document.body.appendChild(notification);
-        setTimeout(() => notification.style.opacity = '1', 10);
+
+        setTimeout(() => notification.classList.add('notification-show'), 10);
         setTimeout(() => {
-            notification.style.opacity = '0';
+            notification.classList.remove('notification-show');
             setTimeout(() => {
                 notification.remove();
                 if (callback) callback();
             }, 300);
-        }, 3000); // Each notification lasts 3 seconds
+        }, 3000);
     }
 
     function showInitialNotification() {
         if (hasShownInitialNotification) return;
 
-        showNotification('ไม่สนับสนุนการใช้งานที่ผิดกฏหมายหรือเพื่อการค้า กรุณาใช้งานด้วยความระมัดระวัง.', () => {
-            showNotification('บายพาสกำลังทำงาน!');
-            hasShownInitialNotification = true; // Mark as shown so it doesn’t repeat
+        showNotification('ไม่สนับสนุนการใช้งานที่ผิดกฏหมายหรือเพื่อการค้า กรุณาใช้งานด้วยความระมัดระวัง.', 'info', () => {
+            showNotification('บายพาสกำลังทำงาน!', 'success');
+            hasShownInitialNotification = true;
         });
     }
 
-    function validateKey() {
+
+     function validateKey() {
         const isKeyValidated = localStorage.getItem('isKeyValidated');
 
         if (isKeyValidated === 'true') {
-            showInitialNotification(); // Show only once on page load if validated
+            showInitialNotification();
             return true;
         }
 
+        // --- Login UI (Improved) ---
         const loginOverlay = document.createElement('div');
-        loginOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        `;
+        loginOverlay.classList.add('login-overlay');
 
         const loginBox = document.createElement('div');
-        loginBox.style.cssText = `
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            width: 320px;
-            text-align: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        `;
+        loginBox.classList.add('login-box');
 
         const title = document.createElement('h2');
+        title.classList.add('login-title');
         title.textContent = 'Please enter the key';
-        title.style.cssText = `
-            margin: 0 0 20px;
-            font-size: 24px;
-            color: #333;
-        `;
+
 
         const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Enter 6-character key';
-        input.style.cssText = `
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            box-sizing: border-box;
-        `;
+        input.classList.add('login-input');
+        input.type = 'password'; 
+        input.placeholder = 'Enter 10-character key';
+
 
         const button = document.createElement('button');
+        button.classList.add('login-button');
         button.textContent = 'Confirm';
-        button.style.cssText = `
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        `;
-        button.onmouseover = () => button.style.transform = 'scale(1.05)';
-        button.onmouseout = () => button.style.transform = 'scale(1)';
+
 
         button.onclick = () => {
             const userKey = input.value.trim();
             console.log('[Debug] User entered key:', userKey);
-            console.log('[Debug] Expected key:', HIDDEN_KEY);
 
             if (userKey === HIDDEN_KEY) {
                 localStorage.setItem('isKeyValidated', 'true');
-                document.body.removeChild(loginOverlay);
-                showInitialNotification(); // Show only once when key is validated
+                loginOverlay.remove();
+                showInitialNotification();
                 console.log('[Debug] Key validated successfully');
             } else {
-                input.style.borderColor = '#ff6b6b';
-                input.placeholder = 'Invalid key!';
+                // --- Error Handling (Improved) ---
+                input.classList.add('login-input-error');
+                showNotification('Invalid key! Please try again.', 'error');
                 input.value = '';
+                input.focus(); 
                 console.log('[Debug] Key validation failed');
             }
         };
@@ -146,6 +105,7 @@
 
         return false;
     }
+    // --- End of UI Functions ---
 
     function setupWatermarkButton() {
         function findAndReplaceButton() {
@@ -172,7 +132,6 @@
                 newButton.onclick = async function (event) {
                     event.stopPropagation();
                     if (!validateKey()) return;
-                    // No notification here; only shown once initially
 
                     console.log('[Watermark-free] Button clicked!');
                     const videoElement = document.querySelector(".component-video > video");
@@ -222,7 +181,6 @@
 
     function modifyResponseData(data) {
         if (!validateKey()) return data;
-        // No notification here; only shown once initially
 
         if (Array.isArray(data)) {
             return data.map(item => {
@@ -248,13 +206,11 @@
 
     function modifyBatchUploadData(data) {
         if (!validateKey()) return data;
-        // No notification here; only shown once initially
         return modifyBatchUploadDataLogic(data);
     }
 
     function modifySingleUploadData(data) {
         if (!validateKey()) return data;
-        // No notification here; only shown once initially
         return modifySingleUploadDataLogic(data);
     }
 
@@ -433,7 +389,130 @@
         console.log('Axios patching for /video/list/personal, /media/batch_upload_media, and /media/upload complete');
     }
 
-    document.addEventListener('DOMContentLoaded', setupWatermarkButton);
+
+    // --- Inject CSS ---
+    const styles = `
+/* --- CSS for Improved UI --- */
+
+/* General notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 9999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* ลดความเข้มของ shadow */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Notification types */
+.notification-info {
+    background-color: #e9f2fa; /* Light blue */
+    color: #2c3e50; /* Dark gray */
+    border: 1px solid #c8d9e8; /* Light blue border */
+}
+
+.notification-success {
+    background-color: #e8f5e9; /* Light green */
+    color: #388e3c; /* Dark green */
+    border: 1px solid #c8e6c9; /* Light green border */
+}
+
+.notification-error {
+    background-color: #fde8e8; /* Light red */
+    color: #d32f2f; /* Dark red */
+    border: 1px solid #f5c6cb; /* Light red border */
+}
+
+/* Show state */
+.notification-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Login Styles --- */
+
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    width: 320px;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Or Pixverse's font */
+}
+
+.login-title {
+    margin: 0 0 20px;
+    font-size: 24px;
+    color: #333;  /* Or a color that matches Pixverse */
+}
+
+.login-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s; /* Smooth transition for focus */
+}
+
+.login-input:focus {
+    border-color: #4ecdc4;  /* Or Pixverse's brand color */
+    outline: none; /* Remove default focus outline */
+}
+
+.login-input-error {
+  border-color: #ff6b6b; /* Red border for error */
+}
+
+.login-button {
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4); /* Or Pixverse's colors */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 100%; /* Full-width button */
+}
+
+.login-button:hover {
+    transform: scale(1.05);
+}
+
+.login-button:active {
+    transform: scale(0.95); /* Slightly smaller on click */
+}
+/* --- End of CSS --- */
+    `;
+
+    const styleElement = document.createElement('style');
+    styleElement.textContent = styles;
+    document.head.appendChild(styleElement);
+
+     document.addEventListener('DOMContentLoaded', setupWatermarkButton);
 
     waitForAxios();
 })();
